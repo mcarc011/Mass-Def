@@ -1,10 +1,6 @@
-# Forward Algorithm
+# Mass Deformations on Phases
 
-**Initial Data**
 
-<img src="./initial.png">
-
-The code takes in the J and E terms in this format and prints out the K matrix. 
 
 ----
 ## References ##
