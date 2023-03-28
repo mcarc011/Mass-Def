@@ -236,7 +236,7 @@ for t in wp4b:
 n = max(max(arrinfo))
 incmatrix = [[0 for j in range(n)] for i in range(n)]
 for arr in arrinfo:
-    incmatrix[arr[0]-1][arr[1]-1] +=1
+    incmatrix[arr[0]-1][arr[1]-1] =1
 
-#plot_web(incmatrix)
+plot_web(incmatrix)
 # %%
