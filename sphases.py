@@ -189,11 +189,29 @@ def equivalent(T1,T2):
     if np.array_equal(T1,T2):
          return True
     
-    for ti in TupFind(T1):
-        Ttest = Swap(T1,ti)
-        if np.array_equal(Ttest,T2):
+    for move in TupFind(T1):
+        Ttest = T1.copy()
+        for ti in move:
+            Ttest = Swap(Ttest,ti)
+            if np.array_equal(Ttest,T2):
+                return True
+    return False
+
+def inweb(xt, dweb):
+    for phase in enumerate(dweb):
+        e1 = equivalent(xt,phase)
+        e2 = equivalent(np.transpose(xt),phase)
+        if e1 or e2:
             return True
     return False
+
+def findphases(T1):
+    dualityweb = [T1]
+    for phase in dualityweb:
+        for n in range(len(phase)):
+            Xi = sduality(phase,n)
+            if not inweb(Xi,dualityweb):
+                DualityWeb += [Xi]
 
      
 
