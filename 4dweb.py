@@ -141,6 +141,6 @@ for arr in arrinfo:
     incmatrix[arr[0]-1][arr[1]-1] =1
 p4b = np.array(incmatrix)
 
-dweb = FindPhases(p4b,p4b-p4b)[0]
+dweb = FindPhases(p4b,p4b-p4b)
 
 #%%
