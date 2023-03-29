@@ -12,3 +12,5 @@
 |---|
 |Phase 3|
 
+Sdual node 6 to get from Phase 1 to Phase 2
+Sdual node 1 to get from Phase 2 to Phase 3
