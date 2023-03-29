@@ -150,93 +150,13 @@ def generate_quiver_diagram(input_mtx: np.array, black_edge_labels_dict: dict, b
     return
 
 
-def plot_web(X: np.array):
+def plot_web(X: np.array, fn: str):
     black_line_mtx =X    
     k_edge_labels_dict = get_edges(black_line_mtx)
-    generate_quiver_diagram(black_line_mtx, k_edge_labels_dict, "k", fname='test2')
+    generate_quiver_diagram(black_line_mtx, k_edge_labels_dict, "k", fname=fn)
     return
 
-def sduality(X,p):
-    ProjV = np.zeros(len(X))
-    ProjM = np.meshgrid(ProjV,ProjV)[0]
-    ProjM[p,p] = 1
-    Xn = X - np.dot(X,ProjM) + np.transpose(np.dot(X,ProjM)) - np.transpose(np.dot(np.transpose(X),ProjM))
-    Xn += np.dot(X,np.dot(ProjM,X)) + np.dot(np.transpose(X),ProjM)
-    return Xn
+for pi,phase in enumerate(dweb):
+    plot_web(phase[0],fn=str(pi))
 
-def TupFind(L):
-	maps = []
-	n = 0
-	while n!=len(L)-1:
-		mt = []
-		for m in range(n,len(L)):
-			if n!=m:
-				mt += [(n,m)]
-		if mt != []:
-			maps += [mt]
-		n+=1
-	return list(itertools.product(*maps))
-
-def Swap(M:np.array, t:tuple):
-	Mt = M.copy()
-	Mt[t[0]],Mt[t[1]] = M[t[1]],M[t[0]]
-	Mt = np.transpose(Mt)
-	Mc = Mt.copy()
-	Mt[t[0]], Mt[t[1]] = Mc[t[1]], Mc[t[0]]
-	return np.transpose(Mt)
-
-def equivalent(T1,T2):
-    if np.array_equal(T1,T2):
-         return True
-    
-    for move in TupFind(T1):
-        Ttest = T1.copy()
-        for ti in move:
-            Ttest = Swap(Ttest,ti)
-            if np.array_equal(Ttest,T2):
-                return True
-    return False
-
-def inweb(xt, dweb):
-    for phase in enumerate(dweb):
-        e1 = equivalent(xt,phase)
-        e2 = equivalent(np.transpose(xt),phase)
-        if e1 or e2:
-            return True
-    return False
-
-def findphases(T1):
-    dualityweb = [T1]
-    for phase in dualityweb:
-        for n in range(len(phase)):
-            Xi = sduality(phase,n)
-            if not inweb(Xi,dualityweb):
-                DualityWeb += [Xi]
-
-     
-
-wp4b = '''X1 2X2 5X5 1 + X1 3X3 4X4 1 + X1 4X4 7X7 1 + X2 4X4 5X5 2 + X3 5X5 6X6 3
-− X1 2X2 4X4 1 − X1 3X3 7X7 1 − X1 4X4 5X5 1 − X2 3X3 5X5 2 − X2 5X5 6X6 2
-+ X2 3X3 7X7 6X6 2 − X3 4X4 7X7 6X6 3'''
-
-arrinfo  = []
-a = True
-for t in wp4b:
-    try:
-        int(t)
-        if a:
-            a = False
-            aval = int(t)
-        else:
-            a = True
-            arrinfo += [[aval,int(t)]]
-    except:
-        pass
-
-n = max(max(arrinfo))
-incmatrix = [[0 for j in range(n)] for i in range(n)]
-for arr in arrinfo:
-    incmatrix[arr[0]-1][arr[1]-1] =1
-
-plot_web(incmatrix)
 # %%
