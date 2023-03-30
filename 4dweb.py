@@ -69,10 +69,16 @@ def Sduality(X,F,p,Wi):
 
     for ri in rules:
         sizes = [len(s.split(',')) for s in ri]
-        rit = [(len(s.split(',')),s) for s in ri]
+        rit = [[len(s.split(',')),s] for s in ri]
         rit.sort()
         if 1 in sizes:
             wtemp = '+'.join(W)
+            I1=[int(s) for s in ri[0] if s.isdigit()]
+            I2=[int(s) for s in ri[1] if s.isdigit()]
+            if I1[0] != I2[0] or I1[-1]!=I2[-1]:
+                rit[1][1] = rit[1][1].split(',')
+                rit[1][1].reverse()
+                rit[1][1] = ','.join(rit[1][1])
             wtemp = wtemp.replace(rit[0][1],rit[1][1])
             W = wtemp.split('+')
 
@@ -102,6 +108,28 @@ def Sduality(X,F,p,Wi):
     return Xn,F, (rules,W)
 
 #%%
+def suppottest(W):
+    allterms = ','.join(W)
+    toric = {}
+    print('\ntoric?')
+    for X in allterms:
+        if X in toric:
+            toric[X] +=1
+        else:
+            toric[X] = 1
+    for key,val in toric.items():
+        if val!=2:
+            print(key,val)
+
+    print('\ngaugeinv?')
+    for term in W:
+        test = [int(s) for s in term if s.isdigit()]
+        test = test[1:-1]
+        ta = [t for i,t in enumerate(test) if i%2==0]
+        tb = [t for i,t in enumerate(test) if i%2==1]
+        if not np.array_equal(ta,tb):
+            print(term)
+    
 
 def Swap(M:np.array, t:tuple):
 	Mt = M.copy()
