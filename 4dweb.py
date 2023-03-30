@@ -71,21 +71,20 @@ def Sduality(X,F,p,W):
     for term in W:
         if len(term.split(','))==2:
             m1,m2 = term.split(',')
+            Mn[int(list(m1)[1])-1,int(list(m1)[2])-1] -=1
+            Mn[int(list(m2)[1])-1,int(list(m2)[2])-1] -=1
             rules += [derivative(m1,W)]
             rules += [derivative(m2,W)]
     for r in rules[:2]:
         sizes = [len(s.split(',')) for s in r]
         if 1 in sizes:
-            W = redefine(r,W,switch=True)        
-    return Xn,F,W
+            W = redefine(r,W,switch=True) 
+    Wn = []
+    for term in W:  
+        if len(term.split(','))!=2:
+            Wn += [term]
+    return Xn+Mn,F,Wn
 
-W = wp4b.replace('−','+')
-W = W.replace('\n',' ')
-W = W.replace(' ','')
-W = W.replace('X',',X')
-W = [w[1:] for w in W.split('+')]
-Xt,Ft,W = Sduality(p4b,p4b-p4b,5,W)
-W
 #%%
 
 def Swap(M:np.array, t:tuple):
@@ -108,8 +107,8 @@ def TupFind(L):
 	templist = list(itertools.product(*maps))
 	return [[(t[0],t[1]) for t in tmap if t[0]!=t[1]] for tmap in templist]
 
-def FindPhases(X: np.array,F: np.array) -> np.array:
-    DualityWeb = [(X,F)]
+def FindPhases(X: np.array,F: np.array,W:list) -> np.array:
+    DualityWeb = [(X,F,W)]
     TrialityMaps = []
 
     def equivalent(X1, F1, X2, F2,counter=False):
@@ -252,6 +251,7 @@ W = W.replace(' ','')
 W = W.replace('X',',X')
 W = [w[1:] for w in W.split('+')]
 
-dweb = FindPhases(p4b,p4b-p4b)
-
+dweb = FindPhases(p4b,p4b-p4b,W)
+dweb += Sduality(p4b,p4b-p4b,5,W)
+dweb += Sduality(p4b,p4b-p4b,6,W)
 #%%
