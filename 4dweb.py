@@ -3,7 +3,7 @@ import numpy as np
 import itertools
 from time import time
 
-
+#%%
 def Sduality(X,F,p,W):
     ProjV = np.zeros(len(X))
     ProjM = np.meshgrid(ProjV,ProjV)[0]
@@ -13,48 +13,67 @@ def Sduality(X,F,p,W):
     Mn = np.transpose(np.dot(Xn,np.dot(ProjM,Xn))) 
 
     labels = ['X','Y','Z','M','A','B','C','D','E','F','G']
+    def derivative(x,f):
+        df = []
+        for term in f:
+            if x in term:
+                term = term.split(',')
+                term.remove(x)
+                df += [','.join(term)]
+        return df
+    
+    def redefine(r,w,switch=False):
+        wt = w.copy()
+        if len(r[0].split(','))==1:
+            m = r[0]
+            t = r[1]
+        if len(r[1].split(','))==1:
+            m = r[1]
+            t = r[0]
+        if len(t.split(','))==2:
+            R1,R2 = t.split(',')
+        for wi,term in enumerate(wt):
+            tsplit = term.split(',')
+            cycle = False
+            for pi in range(len(tsplit)):
+                tempterm = tsplit[-pi:] + tsplit[:-pi]
+                if R1+R2 in ''.join(tempterm):
+                    cycle = True
+                    break
+                if switch and R2+R1 in ''.join(tempterm):
+                    R2,R1 = R1,R2
+                    cycle = True
+                    break
+            if cycle:
+                tempterm.remove(R2)
+                nterm = ','.join(tempterm)
+                wt[wi] = nterm.replace(R1,m)
+        return wt
+
+
     for i in range(len(Mn)):
         for j in range(len(Mn)):
             if Mn[i,j] !=0:
                 for l in labels:
-                    if l+str(i+1)+str(j+1) not in ','.join(W):
+                    meson = l+str(i+1)+str(j+1)
+                    X1 = l+str(j+1)+str(p+1)
+                    X2 = l+str(p+1)+str(i+1)
+                    if meson and X1 and X2 not in ','.join(W):
                         break 
-                meson = l+str(i+1)+str(j+1)
-                ameson = str(j+1)+str(i+1)
-                X1 = l+str(j+1)+str(p+1)
-                X2 = l+str(p+1)+str(i+1)
                 W +=[meson+','+X1+','+X2]
+
                 for l in labels:
                     R1 = l+str(i+1)+str(p+1)
                     R2 = l+str(p+1)+str(j+1)
-                    for wi,term in enumerate(W):
-                        if R1+','+R2 in term:
-                            nterm = term.replace(R1+R2,meson)
-                            W[wi] = nterm
-                            break
-                intout = False
-                for la in labels:
-                    for wi,term in enumerate(W):
-                        if meson+','+la+ameson == term or la+ameson+','+meson == term:
-                            W = W[i]+W[i+1]
-                            aterms = [wt.replace(la+ameson+',','') for wt in W if la+ameson in wt]
-                            mterms = [wt.replace(meson+',','') for wt in W if meson in wt]
-                            Mn[i,j] -=1
-                            Xn[i,j] -=1
-                            
-                            intout = True
-                            Wnew = []
-                            for term in W:
-                                if la+ameson in term:
-                                    Wnew += [term.replace(la+ameson+',',mterms)]
-                                if meson in term:
-                                    Wnew += [term.replace(meson+',',aterms)]
-                                else:
-                                    Wnew += [term]
-                            break
-                if not intout:
-                    Wnew = W.copy()
-    return Xn,F,Wnew
+                    W = redefine([R1+','+R2,meson],W)
+
+    for wi,term in enumerate(W):
+        if len(term.split(','))==2:
+            m1,m2 = term.split(',')
+            W = redefine(derivative(m1,W),W,switch=True)
+            W = redefine(derivative(m2,W),W,switch=True)
+                
+    return Xn,F,W
 
 W = wp4b.replace('−','+')
 W = W.replace('\n',' ')
@@ -62,8 +81,8 @@ W = W.replace(' ','')
 W = W.replace('X',',X')
 W = [w[1:] for w in W.split('+')]
 Xt,Ft,W = Sduality(p4b,p4b-p4b,5,W)
-print(W)
-
+W
+#%%
 
 def Swap(M:np.array, t:tuple):
 	Mt = M.copy()
