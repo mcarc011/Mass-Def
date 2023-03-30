@@ -82,22 +82,17 @@ def Sduality(X,F,p,Wi):
             wtemp = wtemp.replace(rit[0][1],rit[1][1])
             W = wtemp.split('+')
 
-    # for ai, aterm in enumerate(W):
-    #     aterm = aterm.split(',')
-    #     for bi,bterm in enumerate(W):
-    #         bterm = bterm.split(',')
-    #         sameterm = False
-    #         if len(aterm)==len(bterm):
-    #             sameterm = True
-    #             for a in aterm:
-    #                 if a not in bterm:
-    #                     sameterm = False
-    #                     break
-    #         if ai!=bi and sameterm:
-    #             print(W[ai],W[bi])
-    #             W.remove(W[ai])
-    #             W.remove(W[bi])
-    #             break
+    Wn = {}
+    for aterm in W:
+        aterm = aterm.split(',')
+        perm = [aterm[ti:]+aterm[:ti] for ti in range(len(aterm))]
+        perm = [','.join(p) for p in perm]
+        if any([p in Wn for p in perm]):
+            key = [p for p in perm if p in Wn][0]
+            del Wn[key]
+        else:
+            Wn[','.join(aterm)] = 1
+    W = [key for key,value in Wn.items() if value==1]
 
     for m in addedmeson:
         if m not in ','.join(W):
@@ -105,14 +100,14 @@ def Sduality(X,F,p,Wi):
             Mn[mt[0]-1,mt[1]-1]-=1
             Xn[mt[1]-1,mt[0]-1]-=1
 
-    return Xn,F, (rules,W)
+    return Xn,F, W
 
 #%%
 def suppottest(W):
     allterms = ','.join(W)
     toric = {}
     print('\ntoric?')
-    for X in allterms:
+    for X in allterms.split(','):
         if X in toric:
             toric[X] +=1
         else:
@@ -296,8 +291,8 @@ W = W.replace('X',',X')
 W = [w[1:] for w in W.split('+')]
 
 dweb = Sduality(p4b,p4b-p4b,5,W)
-a,b,c = dweb
-#dweb2 = Sduality(a,b,5,c)
+dweb2 = Sduality(dweb[0],dweb[1],5,dweb[2])
+
 
 ansW = 'X13X34X41+X14X47X71+X24X45X52+X12X24X41+X13X37X71+X14X45X51+X23X37Y72+X34X47Y73+Y72X26X67+Y73X36X67+X51X12X26X65+X52X23X36X65'
 ansW = ansW.replace('X',',X')
