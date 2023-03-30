@@ -1,22 +1,68 @@
+#%%
 import numpy as np
 import itertools
 from time import time
 
-def Sduality(X,F,p):
+
+def Sduality(X,F,p,W):
     ProjV = np.zeros(len(X))
     ProjM = np.meshgrid(ProjV,ProjV)[0]
     ProjM[p,p] = 1
     Xn = X - np.dot(X,ProjM) + np.transpose(np.dot(X,ProjM)) - np.transpose(np.dot(np.transpose(X),ProjM))
     Xn += np.dot(np.transpose(X),ProjM)
-    Xn += np.transpose(np.dot(Xn,np.dot(ProjM,Xn))) 
+    Mn = np.transpose(np.dot(Xn,np.dot(ProjM,Xn))) 
 
-    for i in range(len(X)):
-        for j in range(len(X)):
-            pairs = min([Xn[i,j],Xn[j,i]])
-            Xn[i,j] -= pairs
-            Xn[j,i] -= pairs
-    return Xn,Xn-Xn
+    labels = ['X','Y','Z','M','A','B','C','D','E','F','G']
+    for i in range(len(Mn)):
+        for j in range(len(Mn)):
+            if Mn[i,j] !=0:
+                for l in labels:
+                    if l+str(i+1)+str(j+1) not in ','.join(W):
+                        break 
+                meson = l+str(i+1)+str(j+1)
+                ameson = str(j+1)+str(i+1)
+                X1 = l+str(j+1)+str(p+1)
+                X2 = l+str(p+1)+str(i+1)
+                W +=[meson+','+X1+','+X2]
+                for l in labels:
+                    R1 = l+str(i+1)+str(p+1)
+                    R2 = l+str(p+1)+str(j+1)
+                    for wi,term in enumerate(W):
+                        if R1+','+R2 in term:
+                            nterm = term.replace(R1+R2,meson)
+                            W[wi] = nterm
+                            break
+                intout = False
+                for la in labels:
+                    for wi,term in enumerate(W):
+                        if meson+','+la+ameson == term or la+ameson+','+meson == term:
+                            W = W[i]+W[i+1]
+                            aterms = [wt.replace(la+ameson+',','') for wt in W if la+ameson in wt]
+                            mterms = [wt.replace(meson+',','') for wt in W if meson in wt]
+                            Mn[i,j] -=1
+                            Xn[i,j] -=1
+                            
+                            intout = True
+                            Wnew = []
+                            for term in W:
+                                if la+ameson in term:
+                                    Wnew += [term.replace(la+ameson+',',mterms)]
+                                if meson in term:
+                                    Wnew += [term.replace(meson+',',aterms)]
+                                else:
+                                    Wnew += [term]
+                            break
+                if not intout:
+                    Wnew = W.copy()
+    return Xn,F,Wnew
 
+W = wp4b.replace('−','+')
+W = W.replace('\n',' ')
+W = W.replace(' ','')
+W = W.replace('X',',X')
+W = [w[1:] for w in W.split('+')]
+Xt,Ft,W = Sduality(p4b,p4b-p4b,5,W)
+print(W)
 
 
 def Swap(M:np.array, t:tuple):
@@ -116,7 +162,7 @@ def FindPhases(X: np.array,F: np.array) -> np.array:
         return False
 
     for phase in DualityWeb:
-        Xt,Ft = phase[0].copy(),phase[1].copy()
+        Xt,Ft,Wt = phase[0].copy(),phase[1].copy(),phase[2].copy()
 
         print('Dweb Length: '+str(len(DualityWeb)),end="\r")
 
@@ -129,11 +175,11 @@ def FindPhases(X: np.array,F: np.array) -> np.array:
 
         for n in range(len(Xt)):
             if np.sum(np.transpose(Xt)[n])+np.sum(Xt[n])==4:
-                Xi,Fi = Sduality(Xt, Ft, n)
+                Xi,Fi,Wi = Sduality(Xt, Ft, n, Wt)
                 if np.trace(Xi)==0 and np.trace(Fi)==0:
                     TrialityMaps += [[(Xt,Ft),(Xi,Fi),n+1]]
                     if not inweb(Xi,Fi,DualityWeb):
-                        DualityWeb += [(Xi,Fi)]
+                        DualityWeb += [(Xi,Fi,Wi)]
 
         
 
@@ -176,6 +222,12 @@ incmatrix = [[0 for j in range(n)] for i in range(n)]
 for arr in arrinfo:
     incmatrix[arr[0]-1][arr[1]-1] =1
 p4b = np.array(incmatrix)
+
+W = wp4b.replace('−','+')
+W = W.replace('\n',' ')
+W = W.replace(' ','')
+W = W.replace('X',',X')
+W = [w[1:] for w in W.split('+')]
 
 dweb = FindPhases(p4b,p4b-p4b)
 
