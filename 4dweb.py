@@ -4,7 +4,8 @@ import itertools
 from time import time
 
 #%%
-def Sduality(X,F,p,W):
+def Sduality(X,F,p,Wi):
+    W = Wi.copy()
     ProjV = np.zeros(len(X))
     ProjM = np.meshgrid(ProjV,ProjV)[0]
     ProjM[p,p] = 1
@@ -21,51 +22,41 @@ def Sduality(X,F,p,W):
                 term.remove(x)
                 df += [','.join(term)]
         return df
-    
-    def redefine(r,w,switch=False):
-        wt = w.copy()
-        if len(r[0].split(','))==1:
-            m = r[0]
-            t = r[1]
-        if len(r[1].split(','))==1:
-            m = r[1]
-            t = r[0]
-        if len(t.split(','))==2:
-            R1,R2 = t.split(',')
-        for wi,term in enumerate(wt):
-            tsplit = term.split(',')
-            cycle = False
-            for pi in range(len(tsplit)):
-                tempterm = tsplit[-pi:] + tsplit[:-pi]
-                if R1+R2 in ''.join(tempterm):
-                    cycle = True
-                    break
-                if switch and R2+R1 in ''.join(tempterm):
-                    R2,R1 = R1,R2
-                    cycle = True
-                    break
-            if cycle:
-                tempterm.remove(R2)
-                nterm = ','.join(tempterm)
-                wt[wi] = nterm.replace(R1,m)
-        return wt
 
-
+    delW = []
+    addedmeson = []
+    relabels = {}
     for i in range(len(Mn)):
         for j in range(len(Mn)):
             if Mn[i,j] !=0:
-                for l in labels:
-                    meson = l+str(i+1)+str(j+1)
-                    X1 = l+str(j+1)+str(p+1)
-                    X2 = l+str(p+1)+str(i+1)
-                    if meson and X1 and X2 not in ','.join(W):
+                for la in labels:
+                    meson = la+str(i+1)+str(j+1)
+                    X1 = la+str(j+1)+str(p+1)
+                    X2 = la+str(p+1)+str(i+1)
+                    if meson not in ','.join(W) and X1 not in ','.join(W) and X2 not in ','.join(W):
                         break 
-                W +=[meson+','+X1+','+X2]
+                delW +=[meson+','+X1+','+X2]
+                addedmeson += [meson]
 
-                for l in labels:
-                    R1 = l+str(i+1)+str(p+1)
-                    R2 = l+str(p+1)+str(j+1)
-                    W = redefine([R1+','+R2,meson],W)
+                for l1 in labels:
+                    R1 = l1+str(i+1)+str(p+1)
+                    for l2 in labels:
+                        R2 = l2+str(p+1)+str(j+1)
+                        for term in W:
+                            save = False
+                            term = term.split(',')
+                            for wi in range(len(W)):
+                                cycleterm = term[wi:]+term[:wi]
+                                if R1+','+R2 in ','.join(cycleterm):
+                                    save = True
+                            if save: 
+                                newlabel = ','.join(cycleterm)
+                                newlabel = newlabel.replace(R1+','+R2,meson)
+                                relabels[','.join(term)] = newlabel
+    for wi in range(len(W)):
+        if W[wi] in relabels:
+            W[wi] = relabels[W[wi]]
+    W += delW
 
     rules = []
     for term in W:
@@ -75,15 +66,40 @@ def Sduality(X,F,p,W):
             Mn[int(list(m2)[1])-1,int(list(m2)[2])-1] -=1
             rules += [derivative(m1,W)]
             rules += [derivative(m2,W)]
-    for r in rules[:2]:
-        sizes = [len(s.split(',')) for s in r]
+
+    for ri in rules:
+        sizes = [len(s.split(',')) for s in ri]
+        rit = [(len(s.split(',')),s) for s in ri]
+        rit.sort()
         if 1 in sizes:
-            W = redefine(r,W,switch=True) 
-    Wn = []
-    for term in W:  
-        if len(term.split(','))!=2:
-            Wn += [term]
-    return Xn+Mn,F,Wn
+            wtemp = '+'.join(W)
+            wtemp = wtemp.replace(rit[0][1],rit[1][1])
+            W = wtemp.split('+')
+
+    # for ai, aterm in enumerate(W):
+    #     aterm = aterm.split(',')
+    #     for bi,bterm in enumerate(W):
+    #         bterm = bterm.split(',')
+    #         sameterm = False
+    #         if len(aterm)==len(bterm):
+    #             sameterm = True
+    #             for a in aterm:
+    #                 if a not in bterm:
+    #                     sameterm = False
+    #                     break
+    #         if ai!=bi and sameterm:
+    #             print(W[ai],W[bi])
+    #             W.remove(W[ai])
+    #             W.remove(W[bi])
+    #             break
+
+    for m in addedmeson:
+        if m not in ','.join(W):
+            mt=[int(s) for s in m if s.isdigit()]
+            Mn[mt[0]-1,mt[1]-1]-=1
+            Xn[mt[1]-1,mt[0]-1]-=1
+
+    return Xn,F, (rules,W)
 
 #%%
 
@@ -251,7 +267,12 @@ W = W.replace(' ','')
 W = W.replace('X',',X')
 W = [w[1:] for w in W.split('+')]
 
-dweb = [(p4b,p4b-p4b)]
-dweb += [Sduality(p4b,p4b-p4b,5,W)]
-dweb += [Sduality(p4b,p4b-p4b,6,W)]
+dweb = Sduality(p4b,p4b-p4b,5,W)
+a,b,c = dweb
+#dweb2 = Sduality(a,b,5,c)
+
+ansW = 'X13X34X41+X14X47X71+X24X45X52+X12X24X41+X13X37X71+X14X45X51+X23X37Y72+X34X47Y73+Y72X26X67+Y73X36X67+X51X12X26X65+X52X23X36X65'
+ansW = ansW.replace('X',',X')
+ansW = ansW.replace('Y',',Y')
+ansW = [w[1:] for w in ansW.split('+')]
 #%%
