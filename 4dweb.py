@@ -251,7 +251,7 @@ W = W.replace(' ','')
 W = W.replace('X',',X')
 W = [w[1:] for w in W.split('+')]
 
-dweb = FindPhases(p4b,p4b-p4b,W)
-dweb += Sduality(p4b,p4b-p4b,5,W)
-dweb += Sduality(p4b,p4b-p4b,6,W)
+dweb = [(p4b,p4b-p4b)]
+dweb += [Sduality(p4b,p4b-p4b,5,W)]
+dweb += [Sduality(p4b,p4b-p4b,6,W)]
 #%%
