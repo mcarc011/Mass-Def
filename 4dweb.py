@@ -67,11 +67,16 @@ def Sduality(X,F,p,W):
                     R2 = l+str(p+1)+str(j+1)
                     W = redefine([R1+','+R2,meson],W)
 
+    rules = []
     for term in W:
         if len(term.split(','))==2:
             m1,m2 = term.split(',')
-            W = redefine(derivative(m1,W),W,switch=True)
-            W = redefine(derivative(m2,W),W,switch=True)          
+            rules += [derivative(m1,W)]
+            rules += [derivative(m2,W)]
+    for r in rules[:2]:
+        sizes = [len(s.split(',')) for s in r]
+        if 1 in sizes:
+            W = redefine(r,W,switch=True)        
     return Xn,F,W
 
 W = wp4b.replace('−','+')
