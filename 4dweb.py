@@ -93,14 +93,36 @@ def Sduality(X,F,p,Wi):
         else:
             Wn[','.join(aterm)] = 1
     W = [key for key,value in Wn.items() if value==1]
-
+    
     for m in addedmeson:
         if m not in ','.join(W):
             mt=[int(s) for s in m if s.isdigit()]
             Mn[mt[0]-1,mt[1]-1]-=1
             Xn[mt[1]-1,mt[0]-1]-=1
 
-    return Xn,F, W
+    toric = {}
+    allterms = ','.join(W)
+    nopartner = []
+    for X in allterms.split(','):
+        if X in toric:
+            toric[X] +=1
+        else:
+            toric[X] = 1
+
+    for key,val in toric.items():
+        if val!=2:
+            nopartner += [key]
+    
+    for i,f1 in enumerate(nopartner):
+        for j,f2 in enumerate(nopartner):
+            n1= [int(s) for s in f1 if s.isdigit()]
+            n2 = [int(s) for s in f2 if s.isdigit()]
+            if i!=j and np.array_equal(n1,n2):
+                wtemp = '+'.join(W)
+                wtemp = wtemp.replace(f1,f2)
+                W = wtemp.split('+')
+
+    return Xn+Mn,F, W
 
 #%%
 def suppottest(W):
@@ -223,24 +245,27 @@ def FindPhases(X: np.array,F: np.array,W:list) -> np.array:
         return False
 
     for phase in DualityWeb:
-        Xt,Ft,Wt = phase[0].copy(),phase[1].copy(),phase[2].copy()
+        try:
+            Xt,Ft,Wt = phase[0].copy(),phase[1].copy(),phase[2].copy()
 
-        print('Dweb Length: '+str(len(DualityWeb)),end="\r")
+            print('Dweb Length: '+str(len(DualityWeb)),end="\r")
 
-        if len(DualityWeb)>100:
+            if len(DualityWeb)>100:
+                break
+            
+            # if anomalies(Xt,Ft):
+            #     print('Anomaly Found')
+            #     break
+
+            for n in range(len(Xt)):
+                if np.sum(np.transpose(Xt)[n])+np.sum(Xt[n])==4:
+                    Xi,Fi,Wi = Sduality(Xt, Ft, n, Wt)
+                    if np.trace(Xi)==0 and np.trace(Fi)==0:
+                        TrialityMaps += [[(Xt,Ft),(Xi,Fi),n+1]]
+                        if not inweb(Xi,Fi,DualityWeb):
+                            DualityWeb += [(Xi,Fi,Wi)]
+        except:
             break
-        
-        # if anomalies(Xt,Ft):
-        #     print('Anomaly Found')
-        #     break
-
-        for n in range(len(Xt)):
-            if np.sum(np.transpose(Xt)[n])+np.sum(Xt[n])==4:
-                Xi,Fi,Wi = Sduality(Xt, Ft, n, Wt)
-                if np.trace(Xi)==0 and np.trace(Fi)==0:
-                    TrialityMaps += [[(Xt,Ft),(Xi,Fi),n+1]]
-                    if not inweb(Xi,Fi,DualityWeb):
-                        DualityWeb += [(Xi,Fi,Wi)]
 
         
 
@@ -290,8 +315,7 @@ W = W.replace(' ','')
 W = W.replace('X',',X')
 W = [w[1:] for w in W.split('+')]
 
-dweb = Sduality(p4b,p4b-p4b,5,W)
-dweb2 = Sduality(dweb[0],dweb[1],5,dweb[2])
+dweb = FindPhases(p4b,p4b-p4b,W)[0]
 
 
 ansW = 'X13X34X41+X14X47X71+X24X45X52+X12X24X41+X13X37X71+X14X45X51+X23X37Y72+X34X47Y73+Y72X26X67+Y73X36X67+X51X12X26X65+X52X23X36X65'

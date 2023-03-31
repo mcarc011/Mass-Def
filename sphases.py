@@ -156,7 +156,22 @@ def plot_web(X: np.array, fn: str):
     generate_quiver_diagram(black_line_mtx, k_edge_labels_dict, "k", fname=fn)
     return
 
+text = ''
 for pi,phase in enumerate(dweb):
     plot_web(phase[0],fn=str(pi))
+    text+= '''
+|<img src="./''' 
+    text += str(pi)
+    text+='''.png" width="200" height="200"> |
+|---|
+|Phase '''
+    text+= str(pi+1)
+    text+= '|'
+    Wstr = '+'.join(phase[-1])
+    Wstr = Wstr.replace(',',' ')
+    text+= '\n\nSuperpotential: ' + str(pi+1) +'\n' + Wstr+'\n\n'
 
+f=open('README2.md','w')
+f.write(text)
+f.close()
 # %%
