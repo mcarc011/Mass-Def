@@ -62,8 +62,6 @@ def Sduality(X,F,p,Wi):
     for term in W:
         if len(term.split(','))==2:
             m1,m2 = term.split(',')
-            Mn[int(list(m1)[1])-1,int(list(m1)[2])-1] -=1
-            Mn[int(list(m2)[1])-1,int(list(m2)[2])-1] -=1
             rules += [derivative(m1,W)]
             rules += [derivative(m2,W)]
 
@@ -93,7 +91,7 @@ def Sduality(X,F,p,Wi):
         else:
             Wn[','.join(aterm)] = 1
     W = [key for key,value in Wn.items() if value==1]
-    
+
     for m in addedmeson:
         if m not in ','.join(W):
             mt=[int(s) for s in m if s.isdigit()]
@@ -315,7 +313,7 @@ W = W.replace(' ','')
 W = W.replace('X',',X')
 W = [w[1:] for w in W.split('+')]
 
-dweb = FindPhases(p4b,p4b-p4b,W)[0]
+dweb = Sduality(p4b,p4b-p4b,5,W)
 
 
 ansW = 'X13X34X41+X14X47X71+X24X45X52+X12X24X41+X13X37X71+X14X45X51+X23X37Y72+X34X47Y73+Y72X26X67+Y73X36X67+X51X12X26X65+X52X23X36X65'
