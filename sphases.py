@@ -169,7 +169,7 @@ for pi,phase in enumerate(dweb):
     text+= '|'
     Wstr = '+'.join(phase[-1])
     Wstr = Wstr.replace(',',' ')
-    text+= '\n\nSuperpotential: ' + str(pi+1) +'\n' + Wstr+'\n\n'
+    text+= '\n\nSuperpotential:' +'\n' + Wstr+'\n\n'
 
 f=open('README2.md','w')
 f.write(text)
